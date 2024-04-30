@@ -1,0 +1,94 @@
+---
+
+- name: Print out the DNS Address Group Member existing values.
+  ansible.builtin.debug:
+    msg: >
+      {{ (lookup('url', fad_dns_address_group_member_api_endpoint
+      % ((dns_address_group.0.name), dns_address_group.1.id), validate_certs=false, split_lines=false,
+      headers=fad_api_header) | from_json).get('payload') }}
+  loop: "{{ fad_dns_address_groups | subelements('address_group_members') }}"
+  loop_control:
+    loop_var: dns_address_group
+  tags: [debug]
+
+- name: Create new DNS Address Group Member entry if it's not found.
+  ansible.builtin.uri:
+    method: POST
+    url: "{{ fad_dns_address_group_member_api_endpoint | format((dns_address_group.0.name), dns_address_group.1.id) }}"
+    body_format: "{{ fad_api_uri_params.body_format }}"
+    validate_certs: "{{ fad_api_uri_params.validate_certs }}"
+    return_content: "{{ fad_api_uri_params.return_content }}"
+    status_code: "{{ fad_api_uri_params.status_code }}"
+    headers: "{{ fad_api_header }}"
+    body: |
+      {
+        "action": "{{ dns_address_group.1.action | string }}",
+        "addr_type": "{{ dns_address_group.1.addr_type | string }}",
+        "ip6_network": "{{ dns_address_group.1.ip6_network | string }}",
+        "ip_network": "{{ dns_address_group.1.ip4_network | string }}",
+        "mkey": "{{ dns_address_group.1.id | string }}"
+      }
+  register: fad_dns_address_group_member_post_results
+  loop: "{{ fad_dns_address_groups | subelements('address_group_members') }}"
+  loop_control:
+    loop_var: dns_address_group
+    label: "{{ 'ID ' + dns_address_group.1.id | string + ' of ' + dns_address_group.0.name }}"
+  when: >
+    (lookup('url', fad_dns_address_group_member_api_endpoint
+    % ((dns_address_group.0.name), dns_address_group.1.id),validate_certs=false,
+    split_lines=false, headers=fad_api_header) | from_json).get('payload').mkey is undefined
+  changed_when: "fad_dns_address_group_member_post_results.json.payload == 0"
+  failed_when: "fad_dns_address_group_member_post_results.json.payload not in [0, -15]"
+
+- name: Update DNS Address Group Member entry if it's exist and any of its value is changed.
+  ansible.builtin.uri:
+    method: PUT
+    url: "{{ fad_dns_address_group_member_api_endpoint | format((dns_address_group.0.name), dns_address_group.1.id) }}"
+    body_format: "{{ fad_api_uri_params.body_format }}"
+    validate_certs: "{{ fad_api_uri_params.validate_certs }}"
+    return_content: "{{ fad_api_uri_params.return_content }}"
+    status_code: "{{ fad_api_uri_params.status_code }}"
+    headers: "{{ fad_api_header }}"
+    body: |
+      {
+        "action": "{{ dns_address_group.1.action | string }}",
+        "addr_type": "{{ dns_address_group.1.addr_type | string }}",
+        "ip6_network": "{{ dns_address_group.1.ip6_network | string }}",
+        "ip_network": "{{ dns_address_group.1.ip4_network | string }}",
+        "mkey": "{{ dns_address_group.1.id | string }}"
+      }
+  register: fad_dns_address_group_member_put_results
+  loop: "{{ fad_dns_address_groups | subelements('address_group_members') }}"
+  loop_control:
+    loop_var: dns_address_group
+    label: "{{ 'ID ' + dns_address_group.1.id | string + ' of ' + dns_address_group.0.name }}"
+  when:
+    - (lookup('url', fad_dns_address_group_member_api_endpoint
+      % ((dns_address_group.0.name), dns_address_group.1.id),validate_certs=false,
+      split_lines=false, headers=fad_api_header) | from_json).get('payload').mkey is defined
+    - (lookup('url', fad_dns_address_group_member_api_endpoint
+      % ((dns_address_group.0.name), dns_address_group.1.id),validate_certs=false,
+      split_lines=false, headers=fad_api_header) | from_json).get('payload').action != dns_address_group.1.action or
+      (lookup('url', fad_dns_address_group_member_api_endpoint
+      % ((dns_address_group.0.name), dns_address_group.1.id),validate_certs=false,
+      split_lines=false, headers=fad_api_header) | from_json).get('payload').addr_type != dns_address_group.1.addr_type or
+      (lookup('url', fad_dns_address_group_member_api_endpoint
+      % ((dns_address_group.0.name), dns_address_group.1.id),validate_certs=false,
+      split_lines=false, headers=fad_api_header) | from_json).get('payload').ip6_network != dns_address_group.1.ip6_network or
+      (lookup('url', fad_dns_address_group_member_api_endpoint
+      % ((dns_address_group.0.name), dns_address_group.1.id),validate_certs=false,
+      split_lines=false, headers=fad_api_header) | from_json).get('payload').ip_network != dns_address_group.1.ip4_network
+  changed_when: "fad_dns_address_group_member_put_results.json.payload == 0"
+  failed_when: "fad_dns_address_group_member_put_results.json.payload not in [0, -15]"
+
+- name: Print out the DNS Address Group Member values after create/update task.
+  ansible.builtin.debug:
+    msg: >
+      {{ (lookup('url', fad_dns_address_group_member_api_endpoint
+      % ((dns_address_group.0.name), dns_address_group.1.id), validate_certs=false, split_lines=false,
+      headers=fad_api_header) | from_json).get('payload') }}
+  loop: "{{ fad_dns_address_groups | subelements('address_group_members') }}"
+  loop_control:
+    loop_var: dns_address_group
+    label: "{{ 'ID ' + dns_address_group.1.id | string + ' of ' + dns_address_group.0.name }}"
+  tags: [debug]

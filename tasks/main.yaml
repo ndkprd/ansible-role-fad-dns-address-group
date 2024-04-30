@@ -1,0 +1,15 @@
+---
+
+- name: Import create/update Global DNS Address Group tasks.
+  vars:
+    fad_dns_address_group_api_endpoint: "{{ fad_base_url + fad_api_endpoint.dns_address_group }}"
+  ansible.builtin.import_tasks: fad_dns_address_group.yaml
+  # tagged by all child task so the parent task would also run when you tag only the child tag
+  tags: [fad_dns_address_group]
+
+- name: Import create/update Global DNS Address Group tasks.
+  vars:
+    fad_dns_address_group_member_api_endpoint: "{{ fad_base_url + fad_api_endpoint.dns_address_group_member }}"
+  ansible.builtin.import_tasks: fad_dns_address_group_member.yaml
+  # tagged by all child task so the parent task would also run when you tag only the child tag
+  tags: [fad_dns_address_group, fad_dns_address_group_member]

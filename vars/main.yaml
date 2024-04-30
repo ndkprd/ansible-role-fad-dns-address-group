@@ -1,0 +1,17 @@
+---
+
+fad_base_url: "https://{{ ansible_host }}/api"
+
+fad_api_endpoint:
+  dns_address_group: "/global_dns_server_address_group?vdom={{ fad_vdom }}&mkey=%s"
+  dns_address_group_member: "/global_dns_server_address_group_child_member?vdom={{ fad_vdom }}&pkey=%s&mkey=%s"
+
+fad_api_uri_params:
+  body_format: json
+  validate_certs: false
+  return_content: true
+  status_code: 200
+
+fad_api_header:
+  'Content-Type': 'application/json'
+  'APITOKEN': '{{ fad_apitoken }}'

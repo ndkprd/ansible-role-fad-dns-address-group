@@ -1,0 +1,48 @@
+---
+
+- name: Print out the Address Group existing values.
+  ansible.builtin.debug:
+    msg: >
+      {{ (lookup('url', fad_dns_address_group_api_endpoint
+      % (dns_address_group.name), validate_certs=false, split_lines=false, headers=fad_api_header) | from_json).get('payload') }}
+  loop: "{{ fad_dns_address_groups }}"
+  loop_control:
+    loop_var: dns_address_group
+    label: "{{ dns_address_group.name }}"
+  tags: [debug]
+
+- name: Create Address Group entry if it's exist and any of its value is changed.
+  ansible.builtin.uri:
+    method: POST
+    url: "{{ fad_dns_address_group_api_endpoint | format(dns_address_group.name) }}"
+    body_format: "{{ fad_api_uri_params.body_format }}"
+    validate_certs: "{{ fad_api_uri_params.validate_certs }}"
+    return_content: "{{ fad_api_uri_params.return_content }}"
+    status_code: "{{ fad_api_uri_params.status_code }}"
+    headers: "{{ fad_api_header }}"
+    body: |
+      {
+        "mkey": "{{ dns_address_group.name }}"
+      }
+  register: fad_dns_address_group_put_results
+  loop: "{{ fad_dns_address_groups }}"
+  loop_control:
+    loop_var: dns_address_group
+    label: "{{ dns_address_group.name }}"
+  when:
+    - (lookup('url', fad_dns_address_group_api_endpoint
+      % (dns_address_group.name), validate_certs=false, split_lines=false,
+      headers=fad_api_header) | from_json).get('payload').mkey is undefined
+  changed_when: "fad_dns_address_group_put_results.json.payload == 0"
+  failed_when: "fad_dns_address_group_put_results.json.payload != 0 and fad_dns_address_group_put_results.json.payload != -15"
+
+- name: Print out the Address Group values after create/update task.
+  ansible.builtin.debug:
+    msg: >
+      {{ (lookup('url', fad_dns_address_group_api_endpoint
+      % (dns_address_group.name), validate_certs=false, split_lines=false, headers=fad_api_header) | from_json).get('payload') }}
+  loop: "{{ fad_dns_address_groups }}"
+  loop_control:
+    loop_var: dns_address_group
+    label: "{{ dns_address_group.name }}"
+  tags: [debug]
