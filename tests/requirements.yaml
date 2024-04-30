@@ -1,5 +1,4 @@
 ---
 
 roles:
-  - ndkprd.fad_dns_zone
-  - ndkprd.fad_dns_policy
+  - ndkprd.fad_dns_address_group

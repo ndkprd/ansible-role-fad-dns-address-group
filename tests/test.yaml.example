@@ -26,4 +26,4 @@
             action: "include" # or exclude
 
   roles:
-    - ../..
+    - ndkprd.fad_dns_address_groups
